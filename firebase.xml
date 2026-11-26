@@ -1,0 +1,6 @@
+<resources>
+ <string name="salon_firebase_app_id"></string>
+ <string name="salon_firebase_api_key"></string>
+ <string name="salon_firebase_project_id"></string>
+ <string name="salon_firebase_sender_id"></string>
+</resources>

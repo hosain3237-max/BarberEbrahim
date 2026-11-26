@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% block content %}
+<h2>مدیریت نوبت‌ها و مشتریان</h2><p>سوابق مشتریان به‌همراه شمارهٔ تماس در فهرست نوبت‌هاست.</p>
+{% for r in rows %}<article><b>{{r.name}}</b> — <a href="tel:{{r.phone}}">{{r.phone}}</a> — {{r.service_name}}<br><time data-iso="{{iso(r.start)}}"></time>{% if r.cancelled %} — لغوشده{% else %}
+<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="id" value="{{r.id}}"><button name="action" value="cancel">لغو نوبت</button><label>روز جدید (شمسی)<select class="day" name="day" data-initial="{{iso(r.start)[:10]}}"></select></label><label>ساعت جدید<input type="time" name="clock" value="{{iso(r.start)[11:16]}}"></label><button name="action" value="move">جابه‌جایی</button></form>{% endif %}</article>{% else %}<p>هنوز نوبتی نیست.</p>{% endfor %}
+<h2>خدمات</h2>{% for s in services+[{'id':0,'name':'','price':'','duration':''}] %}<form method="post" class="card"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="id" value="{{s.id}}"><label>نام خدمت<input name="name" value="{{s.name}}" required maxlength="80"></label><label>قیمت (تومان)<input type="number" name="price" value="{{s.price}}" min="0" required></label><label>مدت (دقیقه)<input type="number" name="duration" value="{{s.duration}}" min="5" max="480" required></label><button name="action" value="service">{{'ذخیره' if s.id else 'افزودن خدمت'}}</button></form>{% endfor %}
+<form method="post" class="card"><h2>تنظیمات</h2><input type="hidden" name="csrf" value="{{csrf}}"><label>شروع کار<input type="time" name="opening" value="{{cfg.opening[:5]}}" required></label><label>پایان کار<input type="time" name="closing" value="{{cfg.closing[:5]}}" required></label><label>یادآوری چند دقیقه قبل؟<input type="number" name="reminder" value="{{cfg.reminder}}" min="1" max="1440" required></label><button name="action" value="settings">ذخیرهٔ تنظیمات</button></form>
+<script>
+const fmt=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{dateStyle:'full',timeZone:'UTC'}), dt=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Tehran'});
+for(const t of document.querySelectorAll('time'))t.textContent=dt.format(new Date(t.dataset.iso));
+const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()), p=k=>parts.find(i=>i.type===k).value;
+const today=Date.UTC(+p('year'),+p('month')-1,+p('day'));
+for(const s of document.querySelectorAll('.day')){for(let i=0;i<=90;i++){const d=new Date(today+i*86400000);s.add(new Option(fmt.format(d),d.toISOString().slice(0,10)));}if([...s.options].some(o=>o.value===s.dataset.initial))s.value=s.dataset.initial;}
+</script>{% endblock %}

@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' version '8.7.3' }
+def salonUrl = providers.gradleProperty('salonUrl').orElse('https://example.invalid/').get()
+if (!salonUrl.matches('https://[A-Za-z0-9.-]+(:[0-9]+)?/')) throw new GradleException('salonUrl must be an HTTPS origin ending in /')
+android {
+ namespace 'ir.ebrahim.salon'
+ compileSdk 35
+ defaultConfig {
+  applicationId 'ir.ebrahim.salon'
+  minSdk 24
+  targetSdk 35
+  versionCode 1
+  versionName '0.1'
+  buildConfigField 'String', 'SALON_URL', '"' + salonUrl + '"'
+ }
+ buildFeatures { buildConfig true }
+}
+dependencies { implementation 'com.google.firebase:firebase-messaging:24.1.2' }

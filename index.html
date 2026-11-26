@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% block content %}
+<form id="booking" class="card"><h2>رزرو نوبت</h2><label>خدمت<select name="service" id="service">{% for s in services %}<option value="{{s.id}}">{{s.name}} — {{'{:,}'.format(s.price)}} تومان — {{s.duration}} دقیقه</option>{% endfor %}</select></label>
+<label>روز (شمسی)<select id="day" required></select></label><label>ساعت آزاد<select name="start" id="start" required></select></label><label>نام مشتری<input name="name" required maxlength="80"></label><label>شمارهٔ موبایل<input name="phone" type="tel" dir="ltr" required maxlength="11" placeholder="09…"></label><button id="submit" disabled>ثبت نوبت</button><p id="status" role="status"></p></form><a href="/admin">ورود مدیر</a>
+<script>
+const by=id=>document.getElementById(id), day=by('day'),service=by('service'),start=by('start'),submit=by('submit'),status=by('status').id;
+const message=s=>by(status).textContent=s;
+const fmt=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{dateStyle:'full',timeZone:'UTC'}),today=new Date('{{today}}T00:00:00Z');
+for(let i=0;i<=90;i++){const d=new Date(+today+i*86400000);day.add(new Option(fmt.format(d),d.toISOString().slice(0,10)));}
+let version=0;
+async function load(){const v=++version;submit.disabled=true;start.replaceChildren(new Option('در حال دریافت…',''));try{const r=await fetch('/slots?'+new URLSearchParams({day:day.value,service:service.value}));if(!r.ok)throw Error();const a=await r.json();if(v!==version)return;start.replaceChildren(new Option(a.length?'انتخاب ساعت':'ساعت آزاد وجود ندارد',''));for(const x of a)start.add(new Option(x.time,x.id));}catch{if(v===version)start.replaceChildren(new Option('خطا در دریافت؛ روز دیگری انتخاب کنید',''));}}
+day.onchange=service.onchange=load;start.onchange=()=>submit.disabled=!start.value;
+by('booking').onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const form=new FormData(e.currentTarget);if(window.SalonAndroid)form.set('token',window.SalonAndroid.token());const r=await fetch('/book',{method:'POST',body:form});if(r.ok){message((await r.json()).message);}else{message(r.status===409?'این ساعت دیگر آزاد نیست.':r.status===400?'نام یا شمارهٔ موبایل معتبر نیست.':'ثبت انجام نشد.');}}catch{message('پاسخی دریافت نشد؛ پیش از ثبت مجدد با آرایشگاه بررسی کنید.');}await load();};load();
+</script>{% endblock %}
